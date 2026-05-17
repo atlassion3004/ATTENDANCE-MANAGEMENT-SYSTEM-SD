@@ -51,6 +51,10 @@ def mark_attendance():
             if current_time >= late_threshold:
                 status = 'Late'   # override whatever the client sent
         # ----- End lateness check -----
+        
+        # ---- ADD THE TWO LINES HERE ---- for RECTIFYING SCANNER ERROR
+        time_in = datetime.now().strftime('%H:%M:%S')
+        time_out = data.get('timeout')
 
         # The rest of the function (auto-create parent session if needed, upsert)
         # ... same as before, using the (possibly modified) 'status'
@@ -79,7 +83,7 @@ def mark_attendance():
                 SET timeout = %s, status = %s
                 WHERE attendanceid = %s AND studentid = %s
             """
-            cursor.execute(update_query, (new_timeout, data['status'], attendance_id, current_student_id))
+            cursor.execute(update_query, (new_timeout, status, attendance_id, current_student_id))
             conn.commit()
             msg = "Attendance updated successfully" if new_timeout is None else "Time‑out recorded successfully"
             status_code = 200
