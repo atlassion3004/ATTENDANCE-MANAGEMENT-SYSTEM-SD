@@ -265,6 +265,18 @@
             font-size: 12px;
             font-weight: 600;
         }
+
+        label.required::after {
+            content: " *";
+            color: #ef4444; /* red */
+            font-weight: bold;
+        }
+        label.optional::after {
+            content: " (optional)";
+            color: #6b7280;
+            font-size: 0.85em;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>

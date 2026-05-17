@@ -357,6 +357,18 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        label.required::after {
+            content: " *";
+            color: #ef4444; /* red */
+            font-weight: bold;
+        }
+        label.optional::after {
+            content: " (optional)";
+            color: #6b7280;
+            font-size: 0.85em;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -563,39 +575,89 @@
         </div>
     </div>
 
-    <!-- Schedule Modal -->
-    <div class="modal" id="scheduleModal">
-        <div class="modal-content">
-            <h3>Add Class Schedule</h3>
-            <select id="scheduleSubjectCode"><option value="">-- Subject --</option></select>
-            <input type="text" id="scheduleClassId" placeholder="Class ID" required>
-            <select id="scheduleDayOfWeek">
-                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-                <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
-            </select>
-            <input type="time" id="scheduleStartTime" step="1"><input type="time" id="scheduleEndTime" step="1">
-            <input type="text" id="scheduleRoom" placeholder="Room">
-            <div id="instructorSelectGroup" class="hidden">
-                <label>Instructor</label><select id="scheduleInstructorID"><option value="">-- None --</option></select>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelScheduleBtn">Cancel</button>
-                <button class="btn-primary" id="saveScheduleBtn">Save</button>
-            </div>
-        </div>
-    </div>
+    <!-- Schedule Modal --> 
+        <div class="modal" id="scheduleModal">
+            <div class="modal-content">
+                <h3>Add Class Schedule</h3>
 
-    <!-- Student Create Modal -->
-    <div class="modal" id="createStudentModal">
-        <div class="modal-content">
-            <h3>Create Student</h3>
-            <input type="text" id="newStudentId" placeholder="Student ID"><input type="text" id="newSurname" placeholder="Surname"><input type="text" id="newFirstName" placeholder="First Name"><input type="text" id="newMiddleName" placeholder="Middle Name"><input type="text" id="newYearLevel" placeholder="Year Level"><input type="text" id="newCourseID" placeholder="Course ID"><input type="text" id="newPassword" placeholder="Password">
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelNewStudentBtn">Cancel</button>
-                <button class="btn-primary" id="saveNewStudentBtn">Create</button>
+                <label class="required">Subject</label>
+                <select id="scheduleSubjectCode" required>
+                    <option value="">-- Select Subject --</option>
+                </select>
+
+                <label class="required">Class ID</label>
+                <input type="text" id="scheduleClassId" placeholder="e.g., CS101-MON-AM" required>
+
+                <label class="required">Day of Week</label>
+                <select id="scheduleDayOfWeek" required>
+                    <option>Monday</option>
+                    <option>Tuesday</option>
+                    <option>Wednesday</option>
+                    <option>Thursday</option>
+                    <option>Friday</option>
+                    <option>Saturday</option>
+                    <option>Sunday</option>
+                </select>
+
+                <label class="required">Start Time</label>
+                <input type="time" id="scheduleStartTime" step="1" required>
+
+                <label class="required">End Time</label>
+                <input type="time" id="scheduleEndTime" step="1" required>
+
+                <label class="optional">Room</label>
+                <input type="text" id="scheduleRoom" placeholder="e.g., Room 201">
+
+                <!-- Admin‑only instructor assignment -->
+                <div id="instructorSelectGroup" style="display:none;">
+                    <label class="optional">Instructor</label>
+                    <select id="scheduleInstructorID">
+                        <option value="">-- None --</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelScheduleBtn">Cancel</button>
+                    <button class="btn-primary" id="saveScheduleBtn">Save</button>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- Create Student Modal -->
+        <div class="modal" id="createStudentModal">
+            <div class="modal-content">
+                <h3>Create New Student</h3>
+
+                <label class="required">Student ID</label>
+                <input type="text" id="newStudentId" placeholder="e.g., 2024-00001" required>
+
+                <label class="required">Surname</label>
+                <input type="text" id="newSurname" placeholder="Surname" required>
+
+                <label class="required">First Name</label>
+                <input type="text" id="newFirstName" placeholder="First Name" required>
+
+                <label class="optional">Middle Name</label>
+                <input type="text" id="newMiddleName" placeholder="Middle Name">
+
+                <label class="optional">Year Level</label>
+                <input type="text" id="newYearLevel" placeholder="Year Level">
+
+                <label class="optional">Course ID</label>
+                <input type="text" id="newCourseID" placeholder="Course ID">
+
+                <label class="required">Password</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="newPassword" placeholder="Password" required style="flex:1;">
+                    <button type="button" id="generateStudentPasswordBtn" style="background:#f0f0f0; border:1px solid #ddd; border-radius:6px; padding:10px 15px; font-size:14px; cursor:pointer;">Generate</button>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelNewStudentBtn">Cancel</button>
+                    <button class="btn-primary" id="saveNewStudentBtn">Create</button>
+                </div>
+            </div>
+        </div>
 
     <!-- Enroll Modal -->
     <div class="modal" id="enrollModal">
