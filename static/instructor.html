@@ -659,11 +659,15 @@
             </div>
         </div>
 
-    <!-- Enroll Modal -->
+    <!-- Enroll Student Modal -->
     <div class="modal" id="enrollModal">
         <div class="modal-content">
-            <h3>Enroll Student</h3>
-            <input type="text" id="enrollStudentId" placeholder="Student ID"><input type="hidden" id="enrollClassId">
+            <h3>Enroll Student into Class</h3>
+
+            <label class="required">Student ID</label>
+            <input type="text" id="enrollStudentId" placeholder="e.g., 2024-111111" required>
+            <input type="hidden" id="enrollClassId">
+
             <div class="modal-actions">
                 <button class="btn-secondary" id="cancelEnrollBtn">Cancel</button>
                 <button class="btn-primary" id="confirmEnrollBtn">Enroll</button>
@@ -671,11 +675,32 @@
         </div>
     </div>
 
-    <!-- Instructor Create Modal -->
+    <!-- Create Instructor Modal -->
     <div class="modal" id="createInstructorModal">
         <div class="modal-content">
-            <h3>Create Instructor</h3>
-            <input type="text" id="newInstructorId" placeholder="ID"><input type="text" id="newInstructorSurname" placeholder="Surname"><input type="text" id="newInstructorFirstName" placeholder="First Name"><input type="text" id="newInstructorMiddleName" placeholder="Middle Name"><input type="text" id="newInstructorDepartment" placeholder="Department"><input type="text" id="newInstructorPassword" placeholder="Password">
+            <h3>Create New Instructor</h3>
+
+            <label class="required">Instructor ID</label>
+            <input type="text" id="newInstructorId" placeholder="e.g., INST-002" required>
+
+            <label class="required">Surname</label>
+            <input type="text" id="newInstructorSurname" placeholder="Surname" required>
+
+            <label class="required">First Name</label>
+            <input type="text" id="newInstructorFirstName" placeholder="First Name" required>
+
+            <label class="optional">Middle Name</label>
+            <input type="text" id="newInstructorMiddleName" placeholder="Middle Name">
+
+            <label class="optional">Department</label>
+            <input type="text" id="newInstructorDepartment" placeholder="Department">
+
+            <label class="required">Password</label>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="newInstructorPassword" placeholder="Password" required style="flex:1;">
+                <button type="button" id="generateInstructorPasswordBtn" style="background:#f0f0f0; border:1px solid #ddd; border-radius:6px; padding:10px 15px; font-size:14px; cursor:pointer;">Generate</button>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-secondary" id="cancelNewInstructorBtn">Cancel</button>
                 <button class="btn-primary" id="saveNewInstructorBtn">Create</button>
@@ -683,11 +708,17 @@
         </div>
     </div>
 
-    <!-- Subject Modal -->
+    <!-- Create Subject Modal -->
     <div class="modal" id="createSubjectModal">
         <div class="modal-content">
-            <h3>Create Subject</h3>
-            <input type="text" id="newSubjectCode" placeholder="Subject Code"><input type="text" id="newSubjectTitle" placeholder="Subject Title">
+            <h3>Create New Subject</h3>
+
+            <label class="required">Subject Code</label>
+            <input type="text" id="newSubjectCode" placeholder="e.g., CS101" required>
+
+            <label class="required">Subject Title</label>
+            <input type="text" id="newSubjectTitle" placeholder="e.g., Introduction to Computer Science" required>
+
             <div class="modal-actions">
                 <button class="btn-secondary" id="cancelNewSubjectBtn">Cancel</button>
                 <button class="btn-primary" id="saveNewSubjectBtn">Create</button>
@@ -695,11 +726,17 @@
         </div>
     </div>
 
-    <!-- Course Modal -->
+    <!-- Create Course Modal -->
     <div class="modal" id="createCourseModal">
         <div class="modal-content">
-            <h3>Create Course</h3>
-            <input type="text" id="newCourseId" placeholder="Course ID"><input type="text" id="newCourseName" placeholder="Course Description">
+            <h3>Create New Course</h3>
+
+            <label class="required">Course ID</label>
+            <input type="text" id="newCourseId" placeholder="e.g., BSCS" required>
+
+            <label class="required">Course Description</label>
+            <input type="text" id="newCourseName" placeholder="e.g., Bachelor of Science in Computer Science" required>
+
             <div class="modal-actions">
                 <button class="btn-secondary" id="cancelNewCourseBtn">Cancel</button>
                 <button class="btn-primary" id="saveNewCourseBtn">Create</button>
