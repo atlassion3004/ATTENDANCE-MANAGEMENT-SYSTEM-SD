@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AMS Student Dashboard</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --teal: #0d9488;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --red: #ef4444;
+            --green: #22c55e;
+            --purple: #8b5cf6;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 70px; /* space for bottom nav */
+        }
+        /* Sticky Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            min-height: 56px;
+            box-shadow: var(--shadow);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--primary);
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .date-pill {
+            background: #f3f4f6;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .btn-logout {
+            background: var(--red);
+            color: white;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 110;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .nav-item {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+            cursor: pointer;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+        .nav-item.active {
+            color: var(--primary-light);
+        }
+        .nav-item .icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        /* Hero Banner */
+        .hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .hero h2 { font-size: 20px; font-weight: 700; }
+        .hero p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .stat-card .label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+        .border-blue { border: 1px solid var(--primary-light); }
+        .border-green { border: 1px solid var(--green); }
+        .border-red { border: 1px solid #fecaca; }
+        .border-purple { border: 1px solid var(--purple); }
+        .text-blue { color: var(--primary-light); }
+        .text-green { color: var(--green); }
+        .text-red { color: var(--red); }
+        .text-purple { color: var(--purple); }
+        /* Search & Filters */
+        .search-bar {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            margin-bottom: 12px;
+            background: white;
+            box-shadow: var(--shadow);
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .chip {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .chip.active { background: var(--primary-light); color: white; border-color: transparent; }
+        /* Cards & Table */
+        .record-cards { display: block; }
+        .attendance-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .subject-title { font-weight: 700; font-size: 16px; }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-present { background: #dcfce7; color: #166534; }
+        .status-absent { background: #fee2e2; color: #991b1b; }
+        .status-late { background: #fef3c7; color: #92400e; }
+        .card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .record-table { display: none; } /* mobile-first cards */
+        @media (min-width: 768px) {
+            .record-cards { display: none; }
+            .record-table { display: table; width: 100%; }
+        }
+        .scan-fab {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+        }
+        /* Screen transition */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeSlideIn 0.3s ease;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .back-bar {
+            padding: 8px 0;
+            color: var(--primary-light);
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .enrolled-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .rate-pill {
+            background: #ede9fe;
+            color: #6d28d9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Header -->
+    <header class="header">
+        <div class="logo">📋 AMS <span id="welcomeMsg" style="font-size:16px; margin-left:12px; color:#0f172a;">Welcome</span></div>
+        <div class="header-right">
+            <div class="date-pill" id="dateDisplay">📅 ...</div>
+            <button class="btn-logout" id="logoutBtn">⏻</button>
+        </div>
+    </header>
+
+    <!-- Main Screens -->
+    <div class="container">
+        <!-- Screen: Dashboard (overall stats only) -->
+        <div class="screen active" id="dashboardScreen">
+            <div class="hero">
+                <h2>My Attendance Overview</h2>
+            </div>
+            <div class="stats-grid" id="overallStats">
+                <div class="stat-card border-blue"><div class="label">Total Days</div><div class="value text-blue" id="statTotal">--</div></div>
+                <div class="stat-card border-green"><div class="label">Present</div><div class="value text-green" id="statPresent">--</div></div>
+                <div class="stat-card border-red"><div class="label">Absent</div><div class="value text-red" id="statAbsent">--</div></div>
+                <div class="stat-card border-purple"><div class="label">Rate</div><div class="value text-purple" id="statRate">--%</div></div>
+            </div>
+        </div>
+
+        <!-- Screen: Attendance Logs -->
+        <div class="screen" id="attendanceScreen">
+            <div class="hero">
+                <h2>My Attendance History</h2>
+            </div>
+            <input type="text" class="search-bar" id="attendanceSearch" placeholder="🔍 Search by subject or class...">
+            <div class="filter-chips" id="attendanceFilters">
+                <div class="chip active" data-status="All">All</div>
+                <div class="chip" data-status="Present">Present</div>
+                <div class="chip" data-status="Absent">Absent</div>
+                <div class="chip" data-status="Late">Late</div>
+            </div>
+            <div class="record-cards" id="recordCards"></div>
+            <table class="record-table" id="recordTable"><thead><tr><th>Date</th><th>Subject</th><th>Class</th><th>Status</th><th>Time In</th><th>Time Out</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <!-- Screen: Subjects List -->
+        <div class="screen" id="subjectsListScreen">
+            <div class="hero">
+                <h2>My Enrolled Subjects</h2>
+                <p>Select a class to view targeted logs</p>
+            </div>
+            <div class="stats-grid" id="enrollmentStatsGrid">
+                <div class="stat-card border-blue"><div class="label">Total Courses</div><div class="value text-blue" id="metricCourses">--</div></div>
+                <div class="stat-card border-green"><div class="label">In Good Standing</div><div class="value text-green" id="metricGood">--</div></div>
+                <div class="stat-card border-red"><div class="label">Attendance Alerts</div><div class="value text-red" id="metricAlerts">--</div></div>
+                <div class="stat-card border-purple"><div class="label">Semester Avg</div><div class="value text-purple" id="metricAvg">--%</div></div>
+            </div>
+            <input type="text" class="search-bar" id="subjectSearch" placeholder="🔍 Search by subject code or title...">
+            <div class="filter-chips">
+                <div class="chip active">All</div>
+                <div class="chip">Major</div>
+                <div class="chip">Elective</div>
+            </div>
+            <div id="enrolledList"></div>
+        </div>
+
+        <!-- Screen: Subject Detail -->
+        <div class="screen" id="subjectDetailScreen">
+            <div class="back-bar" id="backToSubjects">← Back to Enrolled Subjects</div>
+            <div class="hero" id="detailHero">
+                <h2 id="detailTitle">Subject Records</h2>
+            </div>
+            <div class="stats-grid" id="detailStats">
+                <div class="stat-card border-blue"><div class="label">Total Sessions</div><div class="value text-blue" id="detailTotal">--</div></div>
+                <div class="stat-card border-green"><div class="label">Days Attended</div><div class="value text-green" id="detailAttended">--</div></div>
+                <div class="stat-card border-red"><div class="label">Days Absent</div><div class="value text-red" id="detailAbsent">--</div></div>
+                <div class="stat-card border-purple"><div class="label">Course Rate</div><div class="value text-purple" id="detailRate">--%</div></div>
+            </div>
+            <input type="text" class="search-bar" id="detailSearch" placeholder="🔍 Search by log date...">
+            <div class="filter-chips" id="detailFilters">
+                <div class="chip active" data-status="All">All</div>
+                <div class="chip" data-status="Present">Present</div>
+                <div class="chip" data-status="Absent">Absent</div>
+                <div class="chip" data-status="Late">Late</div>
+            </div>
+            <div class="record-cards" id="detailCards"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-screen="dashboardScreen">
+            <span class="icon">📊</span> Dashboard
+        </div>
+        <div class="nav-item" data-screen="attendanceScreen">
+            <span class="icon">📅</span> Attendance
+        </div>
+        <div class="nav-item" data-screen="subjectsListScreen">
+            <span class="icon">📚</span> Subjects
+        </div>
+    </div>
+
+    <!-- FAB for QR Scanner -->
+    <button class="scan-fab" id="scanFabBtn">📷</button>
+
+    <!-- QR Scanner Modal (same as before) -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <h3>Scan Attendance QR</h3>
+            <div id="reader"></div>
+            <p id="scanResult"></p>
+            <button id="closeQrBtn">Close</button>
+            <button id="scanAgainBtn" class="hidden">Scan Again</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (!token || role !== 'student') { window.location.href = '/'; }
+
+        let currentScreen = 'dashboardScreen';
+        let selectedClassId = null;
+        let selectedSubjectTitle = '';
+
+        // ---------- Header Utils ----------
+        document.getElementById('dateDisplay').innerHTML = `📅 ${new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`;
+        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        async function loadWelcomeMessage() {
+            const res = await fetch(`${API_BASE}/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('welcomeMsg').textContent = `Welcome, ${data.name}`;
+            }
+        }
+        loadWelcomeMessage();
+
+        // ---------- Screen Navigation ----------
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            currentScreen = screenId;
+            // Update bottom nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.screen === screenId) item.classList.add('active');
+            });
+            // Load content based on screen
+            if (screenId === 'dashboardScreen') loadOverallStats();
+            else if (screenId === 'attendanceScreen') loadAttendanceRecords();
+            else if (screenId === 'subjectsListScreen') loadEnrolledSubjects();
+            // detail screen loaded separately
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => showScreen(item.dataset.screen));
+        });
+
+        // ---------- Overall Stats (Dashboard) ----------
+        async function loadOverallStats() {
+            const res = await fetch(`${API_BASE}/api/student/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.status === 401) { logout(); return; }
+            const stats = await res.json();
+            document.getElementById('statTotal').textContent = stats.total_days;
+            document.getElementById('statPresent').textContent = stats.present;
+            document.getElementById('statAbsent').textContent = stats.absent;
+            document.getElementById('statRate').textContent = stats.attendance_rate + '%';
+        }
+
+        // ---------- Attendance Records (Attendance Screen) ----------
+        let attendanceStatus = 'All';
+        let attendanceSearchTerm = '';
+        async function loadAttendanceRecords() {
+            let url = `${API_BASE}/api/student/attendance?status=${attendanceStatus}`;
+            if (attendanceSearchTerm) url += `&search=${encodeURIComponent(attendanceSearchTerm)}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const records = await res.json();
+            renderAttendanceCards(records);
+        }
+        function renderAttendanceCards(records) {
+            const cardsContainer = document.getElementById('recordCards');
+            const tableBody = document.querySelector('#recordTable tbody');
+            cardsContainer.innerHTML = '';
+            tableBody.innerHTML = '';
+            records.forEach(r => {
+                const statusClass = `status-${r.status.toLowerCase()}`;
+                cardsContainer.innerHTML += `
+                    <div class="attendance-card">
+                        <div class="card-header">
+                            <span class="subject-title">${r.SubjectTitle || 'N/A'}</span>
+                            <span class="status-badge ${statusClass}">${r.status}</span>
+                        </div>
+                        <div class="card-body">
+                            <div><span class="label">Date</span><span class="value">${r.date || '--'}</span></div>
+                            <div><span class="label">Class</span><span class="value">${r.ClassID || '--'}</span></div>
+                            <div><span class="label">Time In</span><span class="value">${r.timein || '--'}</span></div>
+                            <div><span class="label">Time Out</span><span class="value">${r.timeout || '--'}</span></div>
+                        </div>
+                    </div>`;
+                tableBody.innerHTML += `<tr><td>${r.date}</td><td>${r.SubjectTitle}</td><td>${r.ClassID}</td><td>${r.status}</td><td>${r.timein}</td><td>${r.timeout}</td></tr>`;
+            });
+        }
+        // Attendance filters & search
+        document.querySelectorAll('#attendanceFilters .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('#attendanceFilters .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                attendanceStatus = chip.dataset.status;
+                loadAttendanceRecords();
+            });
+        });
+        document.getElementById('attendanceSearch').addEventListener('input', (e) => {
+            attendanceSearchTerm = e.target.value;
+            loadAttendanceRecords();
+        });
+
+        // ---------- Enrolled Subjects (Subjects List) ----------
+        let enrolledData = [];
+        async function loadEnrolledSubjects() {
+            const res = await fetch(`${API_BASE}/api/student/enrolled-subjects`, { headers: { 'Authorization': `Bearer ${token}` } });
+            enrolledData = await res.json();
+            renderSubjectCards(enrolledData);
+            // Load enrollment stats
+            const statsRes = await fetch(`${API_BASE}/api/student/enrollment-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                document.getElementById('metricCourses').textContent = stats.total_courses;
+                document.getElementById('metricGood').textContent = stats.in_good_standing;
+                document.getElementById('metricAlerts').textContent = stats.attendance_alerts;
+                document.getElementById('metricAvg').textContent = stats.semester_avg + '%';
+            }
+        }
+        function renderSubjectCards(subjects) {
+            const container = document.getElementById('enrolledList');
+            if (!subjects.length) {
+                container.innerHTML = '<p style="text-align:center; color:#6b7280;">No enrolled subjects found.</p>';
+                return;
+            }
+            container.innerHTML = subjects.map(s => `
+                <div class="enrolled-card" onclick="openSubjectDetail('${s.ClassID}', '${s.SubjectTitle || s.SubjectCode}')">
+                    <div class="card-header">
+                        <span class="subject-title">${s.SubjectCode} - ${s.SubjectTitle || ''}</span>
+                        <span class="rate-pill">RATE: ${s.attendance_rate}%</span>
+                    </div>
+                    <div class="card-body">
+                        <div><span class="label">Instructor</span><span class="value">${s.instructor_name || 'N/A'}</span></div>
+                        <div><span class="label">Schedule</span><span class="value">${s.schedule || 'N/A'}</span></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        // Subject search (simple client-side filter)
+        document.getElementById('subjectSearch').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = enrolledData.filter(s => 
+                (s.SubjectCode + ' ' + s.SubjectTitle).toLowerCase().includes(term)
+            );
+            renderSubjectCards(filtered);
+        });
+
+        // ---------- Subject Detail Screen ----------
+        window.openSubjectDetail = function(classId, title) {
+            selectedClassId = classId;
+            selectedSubjectTitle = title;
+            document.getElementById('detailTitle').textContent = title + ' Records';
+            showScreen('subjectDetailScreen');
+            loadDetailData();
+        };
+        document.getElementById('backToSubjects').addEventListener('click', () => {
+            showScreen('subjectsListScreen');
+        });
+
+        let detailStatus = 'All';
+        async function loadDetailData() {
+            // Load stats for this class
+            const enrolled = enrolledData.find(s => s.ClassID === selectedClassId);
+            if (enrolled) {
+                document.getElementById('detailTotal').textContent = enrolled.total_sessions;
+                document.getElementById('detailAttended').textContent = enrolled.attended;
+                document.getElementById('detailAbsent').textContent = enrolled.total_sessions - enrolled.attended;
+                document.getElementById('detailRate').textContent = enrolled.attendance_rate + '%';
+            }
+            // Load records
+            let url = `${API_BASE}/api/student/attendance?classid=${selectedClassId}&status=${detailStatus}`;
+            const searchTerm = document.getElementById('detailSearch').value.trim();
+            if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const records = await res.json();
+            const cardsContainer = document.getElementById('detailCards');
+            cardsContainer.innerHTML = '';
+            records.forEach(r => {
+                const statusClass = `status-${r.status.toLowerCase()}`;
+                cardsContainer.innerHTML += `
+                    <div class="attendance-card">
+                        <div class="card-header">
+                            <span class="subject-title">${r.date || 'N/A'}</span>
+                            <span class="status-badge ${statusClass}">${r.status}</span>
+                        </div>
+                        <div class="card-body">
+                            <div><span class="label">Time In</span><span class="value">${r.timein || '--'}</span></div>
+                            <div><span class="label">Time Out</span><span class="value">${r.timeout || '--'}</span></div>
+                        </div>
+                    </div>`;
+            });
+        }
+        // Detail filters
+        document.querySelectorAll('#detailFilters .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('#detailFilters .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                detailStatus = chip.dataset.status;
+                loadDetailData();
+            });
+        });
+        document.getElementById('detailSearch').addEventListener('input', () => {
+            loadDetailData();
+        });
+
+        // ---------- QR Scanner (unchanged) ----------
+        // (Same QR modal and logic as before)
+        const qrModal = document.getElementById('qrModal');
+        const scanResultEl = document.getElementById('scanResult');
+        const scanAgainBtn = document.getElementById('scanAgainBtn');
+        let html5QrCode = null;
+
+        document.getElementById('scanFabBtn').addEventListener('click', () => {
+            qrModal.classList.add('active');
+            setTimeout(startScanner, 100);
+        });
+        document.getElementById('closeQrBtn').addEventListener('click', () => {
+            stopScanner();
+            qrModal.classList.remove('active');
+            scanResultEl.textContent = '';
+            scanAgainBtn.classList.add('hidden');
+        });
+        document.getElementById('scanAgainBtn').addEventListener('click', () => {
+            scanAgainBtn.classList.add('hidden');
+            scanResultEl.textContent = '';
+            startScanner();
+        });
+        function startScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; createScanner(); }).catch(() => { html5QrCode = null; createScanner(); });
+            } else createScanner();
+        }
+        function createScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => scanResultEl.innerHTML = `<span style="color:red;">Camera error: ${err}</span>`);
+        }
+        function stopScanner() {
+            if (html5QrCode) { html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error); }
+        }
+        function onScanSuccess(decodedText) {
+            if (html5QrCode) html5QrCode.pause();
+            scanResultEl.textContent = `Scanned: ${decodedText.trim()}. Marking...`;
+            markAttendance(decodedText.trim());
+        }
+        function onScanFailure(error) {}
+        async function markAttendance(attendanceId) {
+            const res = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ attendanceid: attendanceId, status: 'Present' })
+            });
+            const data = await res.json();
+            scanResultEl.innerHTML = res.ok ? `<span style="color:green;">✅ ${data.message}</span>` : `<span style="color:red;">❌ ${data.error}</span>`;
+            scanAgainBtn.classList.remove('hidden');
+            // Refresh relevant data
+            if (currentScreen === 'dashboardScreen') loadOverallStats();
+            else if (currentScreen === 'attendanceScreen') loadAttendanceRecords();
+        }
+
+        // Initial load
+        loadOverallStats();
+    </script>
+</body>
+</html>

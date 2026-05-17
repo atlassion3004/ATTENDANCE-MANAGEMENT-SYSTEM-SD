@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS - Attendance Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .welcome-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 24px;
+        }
+        .role-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .role-toggle button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-toggle button.active {
+            background: #3b82f6;
+            color: white;
+            border-radius: 8px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .sign-in-btn {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background 0.3s;
+        }
+        .sign-in-btn:hover {
+            background: #2563eb;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">AMS</div>
+        <div class="subtitle">Attendance Management System</div>
+        <div class="welcome-text">Welcome back! Sign in to continue</div>
+
+        <div class="role-toggle">
+            <button id="instructorBtn" class="active">Instructor</button>
+            <button id="studentBtn">Student</button>
+        </div>
+
+        <div class="input-group">
+            <label id="idLabel" for="userId">Instructor ID</label>
+            <input type="text" id="userId" placeholder="e.g., INST-001">
+        </div>
+
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+
+        <button class="sign-in-btn" id="signInBtn">Sign In</button>
+        <p class="error-message" id="errorMsg"></p>
+    </div>
+
+    <script>
+        // API base automatically adapts (use the same origin)
+        const API_BASE = window.location.origin;
+
+        // Toggle role
+        const instructorBtn = document.getElementById('instructorBtn');
+        const studentBtn = document.getElementById('studentBtn');
+        const idLabel = document.getElementById('idLabel');
+        const userIdInput = document.getElementById('userId');
+
+        function setActiveRole(role) {
+            if (role === 'instructor') {
+                instructorBtn.classList.add('active');
+                studentBtn.classList.remove('active');
+                idLabel.textContent = 'Instructor ID';
+                userIdInput.placeholder = 'e.g., INST-001';
+            } else {
+                studentBtn.classList.add('active');
+                instructorBtn.classList.remove('active');
+                idLabel.textContent = 'Student ID';
+                userIdInput.placeholder = 'e.g., 2021-00001';
+            }
+        }
+
+        instructorBtn.addEventListener('click', () => setActiveRole('instructor'));
+        studentBtn.addEventListener('click', () => setActiveRole('student'));
+
+        // Login
+        document.getElementById('signInBtn').addEventListener('click', async () => {
+            const userid = userIdInput.value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorEl = document.getElementById('errorMsg');
+
+            if (!userid || !password) {
+                errorEl.textContent = 'Please enter both ID and password.';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Store token and role
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('role', data.role);
+
+                    // Redirect based on role
+                    if (data.role === 'instructor' || data.role === 'admin') {
+                        window.location.href = '/instructor-dashboard';   // will create later
+                    } else {
+                        window.location.href = '/student-dashboard';      // or redirect to scanner
+                    }
+                } else {
+                    errorEl.textContent = data.error || 'Login failed. Please try again.';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Network error. Check your connection.';
+            }
+        });
+    </script>
+</body>
+</html>

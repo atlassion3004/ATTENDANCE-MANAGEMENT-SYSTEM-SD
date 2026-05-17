@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS – QR Attendance Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1a1a2e;
+            margin: 0 0 8px 0;
+        }
+        .sub {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 16px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #startCameraBtn {
+            background: #3b82f6;
+            color: white;
+        }
+        #scanAgainBtn {
+            background: #28a745;
+            color: white;
+        }
+        #logoutBtn {
+            background: #e74c3c;
+            color: white;
+            margin-top: 12px;
+        }
+        #reader {
+            width: 100%;
+            margin: 20px 0;
+        }
+        #scanResult {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="scannerSection">
+            <h2>Scan QR Code</h2>
+            <p class="sub">Point camera at the attendance QR code</p>
+            <button id="startCameraBtn">Start Camera</button>
+            <div id="reader"></div>
+            <p id="scanResult" class="success"></p>
+            <button id="scanAgainBtn" class="hidden">Scan Again (Time‑out)</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        // Immediately check for token; if missing, redirect to main login
+        let authToken = localStorage.getItem('token');
+        if (!authToken) {
+            window.location.href = '/';
+        }
+
+        let html5QrCode = null;
+
+        // ----- Camera start -----
+        document.getElementById('startCameraBtn').addEventListener('click', () => {
+            document.getElementById('startCameraBtn').style.display = 'none';
+            startScanner();
+        });
+
+        function startScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                document.getElementById('scanResult').innerHTML =
+                    `<span class="error">Camera error: ${err}. Try reloading.</span>`;
+                console.error(err);
+                document.getElementById('startCameraBtn').style.display = 'block';
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            if (html5QrCode) {
+                html5QrCode.pause();
+            }
+            const attendanceId = decodedText.trim();
+            document.getElementById('scanResult').innerHTML =
+                `Scanned: ${attendanceId}. Marking ...`;
+
+            markAttendance(attendanceId).then(() => {
+                document.getElementById('scanAgainBtn').classList.remove('hidden');
+            });
+        }
+
+        function onScanFailure(error) {
+            // Ignore – keeps scanning
+        }
+
+        // ----- Mark Attendance -----
+        async function markAttendance(attendanceId) {
+            try {
+                const res = await fetch(`${API_BASE}/attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        attendanceid: attendanceId,
+                        status: 'Present'
+                    })
+                });
+                const data = await res.json();
+
+                const resultEl = document.getElementById('scanResult');
+                if (res.ok) {
+                    resultEl.innerHTML = `<span class="success">✅ ${data.message}</span>`;
+                } else {
+                    resultEl.innerHTML = `<span class="error">❌ ${data.error || 'Failed to mark'}</span>`;
+                    if (res.status === 401) {
+                        // Token expired or invalid – clear and redirect to login
+                        localStorage.clear();
+                        window.location.href = '/';
+                    }
+                }
+            } catch (err) {
+                document.getElementById('scanResult').innerHTML =
+                    `<span class="error">❌ Network error: ${err.message}</span>`;
+            }
+        }
+
+        // ----- Scan Again -----
+        document.getElementById('scanAgainBtn').addEventListener('click', () => {
+            document.getElementById('scanAgainBtn').classList.add('hidden');
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
+        });
+
+        // ----- Logout -----
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            authToken = null;
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
+            }
+            // Redirect to main unified login page
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

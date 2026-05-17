@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS Instructor Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-light: #0066ff;
+            --teal: #0d9488;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --red: #ef4444;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --purple: #8b5cf6;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* Sticky Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--primary);
+        }
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .instructor-badge {
+            background: #ede9fe;
+            color: #6d28d9;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .date-pill {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-logout {
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            padding: 0 24px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .nav-tab {
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            min-width: fit-content;
+        }
+        .nav-tab.active {
+            color: var(--primary-light);
+            border-bottom-color: var(--primary-light);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        
+        .sub-page {
+            display: none;
+        }
+        .sub-page.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .metric-card .label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .metric-card .value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .border-blue { border-color: var(--primary-light); }
+        .text-blue { color: var(--primary-light); }
+        .border-purple { border-color: var(--purple); }
+        .text-purple { color: var(--purple); }
+        .border-red { border-color: #fecaca; }
+        .text-red { color: #dc2626; }
+        .border-orange { border-color: #fde68a; }
+        .text-orange { color: #d97706; }
+
+        /* Filter Card */
+        .filter-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 160px;
+        }
+        .filter-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .filter-group input,
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        .btn-load {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            align-self: flex-end;
+        }
+
+        /* Table */
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .record-table th {
+            background: #f1f5f9;
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .record-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        .record-table tbody tr:hover td {
+            background: #f8fafc;
+            transition: background 0.15s;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .status-present { background: #dcfce7; color: #166534; }
+        .status-absent { background: #fee2e2; color: #991b1b; }
+        .status-late { background: #fef3c7; color: #92400e; }
+        .action-icons {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            cursor: pointer;
+            font-size: 16px;
+            background: none;
+            border: none;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .action-btn:hover { background: #e2e8f0; }
+        .view-btn { color: var(--teal); }
+        .edit-btn { color: #f59e0b; }
+        .delete-btn { color: var(--red); }
+
+        /* Modal (reuse styles) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+        .modal-content h3 { margin-bottom: 16px; }
+        .modal-content input,
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn-primary {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .sub-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .sub-tab.active { background: var(--primary-light); color: white; }
+        .schedule-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                📋 AMS
+                <span id="welcomeMsg" style="font-size: 18px; font-weight: 500; margin-left: 12px; color: #0f172a;">Welcome</span>
+            </div>
+            <div class="subtitle">Attendance Management System</div>
+        </div>
+        <div class="header-right">
+            <div class="instructor-badge" id="roleBadge">Instructor</div>
+            <div class="date-pill" id="dateDisplay">📅 ...</div>
+            <button class="btn-logout" id="logoutBtn">Logout ➔</button>
+        </div>
+    </header>
+
+    <nav class="nav-tabs" id="mainNav">
+        <div class="nav-tab active" data-page="attendance">Dashboard</div>
+        <div class="nav-tab" data-page="myClasses">My Classes</div>
+        <div class="nav-tab" data-page="students">Students</div>
+        <div class="nav-tab admin-only" data-page="instructors">Instructors</div>
+        <div class="nav-tab" data-page="reports">Reports</div>
+        <div class="nav-tab admin-only" data-page="subjectsCourses">Subjects & Courses</div>
+    </nav>
+
+    <div class="container">
+        <!-- ======== ATTENDANCE DASHBOARD PAGE ======== -->
+        <div class="page active" id="attendancePage">
+            <h1 class="section-title">Attendance Records & Class Roster</h1>
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-card border-blue"><div class="label">Total Students</div><div class="value text-blue" id="metricStudents">--</div></div>
+                <div class="metric-card border-purple"><div class="label">Attendance Rate</div><div class="value text-purple" id="metricRate">--%</div></div>
+                <div class="metric-card border-red"><div class="label">Total Absences</div><div class="value text-red" id="metricAbsences">--</div></div>
+                <div class="metric-card border-orange"><div class="label">Total Lates</div><div class="value text-orange" id="metricLates">--</div></div>
+            </div>
+            <div class="filter-card">
+                <div class="filter-group">
+                    <label>Select Class</label>
+                    <select id="classSelect"><option value="">-- Choose Class --</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Date</label>
+                    <input type="date" id="dateFilter">
+                </div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="searchInput" placeholder="Search student name or ID...">
+                </div>
+                <button class="btn-load" id="loadRecordsBtn">Load</button>
+            </div>
+            <table class="record-table" id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>Attendance ID</th>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- ======== MY CLASSES PAGE (Schedules & QR) ======== -->
+        <div class="page" id="myClassesPage">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1 class="section-title">My Class Schedules</h1>
+                <button class="btn-primary" id="openScheduleModalBtn">+ Add Schedule</button>
+            </div>
+            <div id="schedulesContainer">Loading...</div>
+        </div>
+
+        <!-- ======== STUDENTS PAGE ======== -->
+        <div class="page" id="studentsPage">
+            <h1 class="section-title">Student Management</h1>
+            <div class="sub-tabs">
+                <div class="sub-tab active" data-sub="allStudents">All Students</div>
+                <div class="sub-tab" data-sub="enrollments">Enrollments</div>
+            </div>
+            <div class="sub-page active" id="allStudentsSub">
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <input type="text" id="studentSearch" placeholder="Search..." style="flex:1;">
+                    <button class="btn-primary" id="searchStudentsBtn">Search</button>
+                    <button class="btn-primary" id="openCreateStudentModalBtn" style="background:#22c55e;">+ New Student</button>
+                </div>
+                <table class="record-table" id="allStudentsTable">
+                    <thead><tr><th>Student ID</th><th>Full Name</th><th>Year Level</th><th>Course</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="sub-page" id="enrollmentsSub">
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <select id="enrollClassSelect" style="flex:1;"><option value="">-- Select Class --</option></select>
+                    <button class="btn-primary" id="loadEnrollmentsBtn">Load</button>
+                    <button class="btn-primary" id="openEnrollModalBtn" style="background:#22c55e;">+ Enroll</button>
+                </div>
+                <table class="record-table" id="enrollmentsTable">
+                    <thead><tr><th>Student ID</th><th>Full Name</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======== INSTRUCTORS PAGE (Admin) ======== -->
+        <div class="page" id="instructorsPage">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h1 class="section-title">Instructor Management</h1>
+                <button class="btn-primary" id="openCreateInstructorModalBtn" style="background:#22c55e;">+ New Instructor</button>
+            </div>
+            <table class="record-table" id="instructorsTable">
+                <thead><tr><th>Instructor ID</th><th>Full Name</th><th>Department</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- ======== REPORTS (Absence) ======== -->
+        <div class="page" id="reportsPage">
+            <h1 class="section-title">Absence Report</h1>
+            <div class="filter-card">
+                <div class="filter-group">
+                    <label>Select Class</label>
+                    <select id="absenceClassSelect"><option value="">-- Choose Class --</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Date</label>
+                    <input type="date" id="absenceDateFilter">
+                </div>
+                <button class="btn-load" id="loadAbsenceReportBtn">Show Absences</button>
+            </div>
+            <div id="absenceResults" style="display:flex; gap:24px;">
+                <div style="flex:1;">
+                    <h3 style="color:#ef4444;">Absent</h3>
+                    <table class="record-table" id="absentTable"><thead><tr><th>Student ID</th><th>Name</th></tr></thead><tbody></tbody></table>
+                </div>
+                <div style="flex:1;">
+                    <h3 style="color:#22c55e;">Present</h3>
+                    <table class="record-table" id="presentTable"><thead><tr><th>Student ID</th><th>Name</th></tr></thead><tbody></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== SUBJECTS & COURSES (Admin) ======== -->
+        <div class="page" id="subjectsCoursesPage">
+            <h1 class="section-title">Subjects & Courses</h1>
+            <div class="sub-tabs">
+                <div class="sub-tab active" data-sub="subjectsSub">Subjects</div>
+                <div class="sub-tab" data-sub="coursesSub">Courses</div>
+            </div>
+            <div class="sub-page active" id="subjectsSub">
+                <button class="btn-primary" id="openCreateSubjectModalBtn" style="background:#22c55e; margin-bottom:16px;">+ New Subject</button>
+                <table class="record-table" id="subjectsTable"><thead><tr><th>Subject Code</th><th>Title</th><th>Actions</th></tr></thead><tbody></tbody></table>
+            </div>
+            <div class="sub-page" id="coursesSub">
+                <button class="btn-primary" id="openCreateCourseModalBtn" style="background:#22c55e; margin-bottom:16px;">+ New Course</button>
+                <table class="record-table" id="coursesTable"><thead><tr><th>Course ID</th><th>Description</th><th>Actions</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== MODALS (same as before but styled consistently) ======== -->
+    <!-- Edit Attendance Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3>Edit Record</h3>
+            <input type="hidden" id="editAttendanceId"><input type="hidden" id="editStudentId">
+            <label>Status</label>
+            <select id="editStatus"><option>Present</option><option>Absent</option><option>Late</option></select>
+            <label>Time In</label><input type="text" id="editTimeIn" placeholder="HH:MM:SS">
+            <label>Time Out</label><input type="text" id="editTimeOut" placeholder="HH:MM:SS">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button class="btn-primary" id="saveEditBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Attendance Modal -->
+    <div class="modal" id="viewModal">
+        <div class="modal-content">
+            <h3>Record Details</h3>
+            <p><strong>Attendance ID:</strong> <span id="viewAttId"></span></p>
+            <p><strong>Student:</strong> <span id="viewStudent"></span></p>
+            <p><strong>Date:</strong> <span id="viewDate"></span></p>
+            <p><strong>Status:</strong> <span id="viewStatus"></span></p>
+            <p><strong>Time In:</strong> <span id="viewTimeIn"></span></p>
+            <p><strong>Time Out:</strong> <span id="viewTimeOut"></span></p>
+            <button class="btn-secondary" id="closeViewBtn" style="margin-top:12px;">Close</button>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content" style="text-align:center;">
+            <h3>Session QR Code</h3>
+            <p>Attendance ID: <strong id="qrAttendanceId"></strong></p>
+            <div id="qrcode"></div>
+            <button class="btn-secondary" id="qrCloseBtn" style="margin-top:12px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <h3>Add Class Schedule</h3>
+            <select id="scheduleSubjectCode"><option value="">-- Subject --</option></select>
+            <input type="text" id="scheduleClassId" placeholder="Class ID" required>
+            <select id="scheduleDayOfWeek">
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+            <input type="time" id="scheduleStartTime" step="1"><input type="time" id="scheduleEndTime" step="1">
+            <input type="text" id="scheduleRoom" placeholder="Room">
+            <div id="instructorSelectGroup" class="hidden">
+                <label>Instructor</label><select id="scheduleInstructorID"><option value="">-- None --</option></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelScheduleBtn">Cancel</button>
+                <button class="btn-primary" id="saveScheduleBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Create Modal -->
+    <div class="modal" id="createStudentModal">
+        <div class="modal-content">
+            <h3>Create Student</h3>
+            <input type="text" id="newStudentId" placeholder="Student ID"><input type="text" id="newSurname" placeholder="Surname"><input type="text" id="newFirstName" placeholder="First Name"><input type="text" id="newMiddleName" placeholder="Middle Name"><input type="text" id="newYearLevel" placeholder="Year Level"><input type="text" id="newCourseID" placeholder="Course ID"><input type="text" id="newPassword" placeholder="Password">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelNewStudentBtn">Cancel</button>
+                <button class="btn-primary" id="saveNewStudentBtn">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enroll Modal -->
+    <div class="modal" id="enrollModal">
+        <div class="modal-content">
+            <h3>Enroll Student</h3>
+            <input type="text" id="enrollStudentId" placeholder="Student ID"><input type="hidden" id="enrollClassId">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelEnrollBtn">Cancel</button>
+                <button class="btn-primary" id="confirmEnrollBtn">Enroll</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructor Create Modal -->
+    <div class="modal" id="createInstructorModal">
+        <div class="modal-content">
+            <h3>Create Instructor</h3>
+            <input type="text" id="newInstructorId" placeholder="ID"><input type="text" id="newInstructorSurname" placeholder="Surname"><input type="text" id="newInstructorFirstName" placeholder="First Name"><input type="text" id="newInstructorMiddleName" placeholder="Middle Name"><input type="text" id="newInstructorDepartment" placeholder="Department"><input type="text" id="newInstructorPassword" placeholder="Password">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelNewInstructorBtn">Cancel</button>
+                <button class="btn-primary" id="saveNewInstructorBtn">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Modal -->
+    <div class="modal" id="createSubjectModal">
+        <div class="modal-content">
+            <h3>Create Subject</h3>
+            <input type="text" id="newSubjectCode" placeholder="Subject Code"><input type="text" id="newSubjectTitle" placeholder="Subject Title">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelNewSubjectBtn">Cancel</button>
+                <button class="btn-primary" id="saveNewSubjectBtn">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Modal -->
+    <div class="modal" id="createCourseModal">
+        <div class="modal-content">
+            <h3>Create Course</h3>
+            <input type="text" id="newCourseId" placeholder="Course ID"><input type="text" id="newCourseName" placeholder="Course Description">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelNewCourseBtn">Cancel</button>
+                <button class="btn-primary" id="saveNewCourseBtn">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- GLOBALS ----------
+        const API_BASE = window.location.origin;
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (!token || (role !== 'instructor' && role !== 'admin')) { window.location.href = '/'; }
+
+        function isAdmin() { return role === 'admin'; }
+        function logout() { localStorage.clear(); window.location.href = '/'; }
+
+        async function loadWelcomeMessage() {
+            try {
+                const res = await fetch(`${API_BASE}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('welcomeMsg').textContent = `Welcome, ${data.name}`;
+                }
+            } catch (err) {
+                console.error('Failed to load welcome message', err);
+            }
+        }
+
+// Call it on page load (right after the global checks)
+loadWelcomeMessage();
+
+        // Header date & role badge
+        document.getElementById('dateDisplay').innerHTML = `📅 ${new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`;
+        document.getElementById('roleBadge').textContent = isAdmin() ? 'Admin' : 'Instructor';
+        document.querySelectorAll('.admin-only').forEach(el => { if (!isAdmin()) el.style.display = 'none'; });
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // ---------- TAB NAVIGATION ----------
+        const tabs = document.querySelectorAll('#mainNav .nav-tab');
+        const pages = document.querySelectorAll('.page');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const pageId = tab.dataset.page + 'Page';
+                pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                // Trigger specific loads
+                switch(tab.dataset.page) {
+                    case 'attendance': loadClassesDropdown(); break;
+                    case 'myClasses': loadSchedulesForQR(); break;
+                    case 'students': loadAllStudents(); loadEnrollmentClassDropdown(); break;
+                    case 'instructors': if(isAdmin()) loadInstructors(); break;
+                    case 'reports': loadAbsenceClassDropdown(); break;
+                    case 'subjectsCourses': if(isAdmin()) { loadSubjects(); loadCourses(); } break;
+                }
+            });
+        });
+
+        // ---------- ATTENDANCE DASHBOARD ----------
+        function loadClassesDropdown() {
+            const select = document.getElementById('classSelect');
+            select.innerHTML = '<option value="">-- Choose Class --</option>';
+            fetch(`${API_BASE}/api/instructor/classes`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json()).then(classes => {
+                classes.forEach(c => { const o = new Option(`${c.ClassID} - ${c.SubjectCode} (${c.SubjectTitle})`, c.ClassID); select.add(o); });
+            });
+        }
+        document.getElementById('loadRecordsBtn').addEventListener('click', () => {
+            const classId = document.getElementById('classSelect').value;
+            const date = document.getElementById('dateFilter').value;
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!classId) return alert('Select a class');
+            // Load metrics
+            fetch(`${API_BASE}/api/instructor/class-metrics?classid=${classId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json()).then(m => {
+                document.getElementById('metricStudents').textContent = m.total_students || 0;
+                document.getElementById('metricRate').textContent = (m.attendance_rate || 0) + '%';
+                document.getElementById('metricAbsences').textContent = m.absences || 0;
+                document.getElementById('metricLates').textContent = m.lates || 0;
+            });
+            // Load records
+            let url = `${API_BASE}/api/attendance-records?classid=${classId}`;
+            if (date) url += `&date=${date}`;
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json()).then(records => {
+                if (search) records = records.filter(r => r.studentid.toLowerCase().includes(search) || r.student_name.toLowerCase().includes(search));
+                renderAttendanceTable(records);
+            });
+        });
+
+        function renderAttendanceTable(records) {
+            const tbody = document.querySelector('#recordsTable tbody');
+            tbody.innerHTML = '';
+            records.forEach(r => {
+                const statusClass = `status-${r.status.toLowerCase()}`;
+                const icon = r.status === 'Present' ? '✓' : r.status === 'Late' ? '⏰' : '✗';
+                tbody.innerHTML += `<tr>
+                    <td style="font-weight:600; color:#0d9488;">${r.attendanceid}</td>
+                    <td>${r.studentid}</td>
+                    <td>${r.student_name}</td>
+                    <td>${r.Date || '--'}</td>
+                    <td><span class="status-badge ${statusClass}">${icon} ${r.status}</span></td>
+                    <td>${r.timein || '--'}</td>
+                    <td>${r.timeout || '--'}</td>
+                    <td><div class="action-icons">
+                        <span class="action-btn view-btn" onclick="viewRecord('${r.attendanceid}','${r.studentid}','${r.student_name}','${r.Date}','${r.status}','${r.timein}','${r.timeout}')" title="View">👁️</span>
+                        <span class="action-btn edit-btn" onclick="editAttendance('${r.attendanceid}','${r.studentid}','${r.status}','${r.timein}','${r.timeout}')" title="Edit">✏️</span>
+                        <span class="action-btn delete-btn" onclick="deleteAttendance('${r.attendanceid}','${r.studentid}')" title="Delete">🗑️</span>
+                    </div></td>
+                </tr>`;
+            });
+        }
+
+        // View/Edit/Delete functions (same as before, adapted)
+        function viewRecord(attId, stuId, name, date, status, tin, tout) {
+            document.getElementById('viewAttId').textContent = attId;
+            document.getElementById('viewStudent').textContent = `${name} (${stuId})`;
+            document.getElementById('viewDate').textContent = date || '--';
+            document.getElementById('viewStatus').textContent = status;
+            document.getElementById('viewTimeIn').textContent = tin || '--';
+            document.getElementById('viewTimeOut').textContent = tout || '--';
+            document.getElementById('viewModal').classList.add('active');
+        }
+        document.getElementById('closeViewBtn').addEventListener('click', () => {
+            document.getElementById('viewModal').classList.remove('active');
+        });
+
+        function editAttendance(attId, stuId, status, tin, tout) {
+            document.getElementById('editAttendanceId').value = attId;
+            document.getElementById('editStudentId').value = stuId;
+            document.getElementById('editStatus').value = status || 'Present';
+            document.getElementById('editTimeIn').value = tin || '';
+            document.getElementById('editTimeOut').value = tout || '';
+            document.getElementById('editModal').classList.add('active');
+        }
+        document.getElementById('cancelEditBtn').addEventListener('click', () => editModal.classList.remove('active'));
+        document.getElementById('saveEditBtn').addEventListener('click', async () => {
+            const body = {
+                attendanceid: document.getElementById('editAttendanceId').value,
+                studentid: document.getElementById('editStudentId').value,
+                status: document.getElementById('editStatus').value,
+                timein: document.getElementById('editTimeIn').value,
+                timeout: document.getElementById('editTimeOut').value
+            };
+            const res = await fetch(`${API_BASE}/api/attendance-records`, {
+                method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.status === 401) { logout(); return; }
+            if (res.ok) { alert('Updated'); editModal.classList.remove('active'); document.getElementById('loadRecordsBtn').click(); }
+            else alert('Error');
+        });
+
+        async function deleteAttendance(attId, stuId) {
+            if (!confirm('Delete?')) return;
+            const res = await fetch(`${API_BASE}/api/attendance-records`, {
+                method: 'DELETE', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ attendanceid: attId, studentid: stuId })
+            });
+            if (res.ok) { alert('Deleted'); document.getElementById('loadRecordsBtn').click(); }
+            else alert('Error');
+        }
+
+        // ---------- MY CLASSES (Schedules & QR) ----------
+        async function loadSchedulesForQR() {
+            const res = await fetch(`${API_BASE}/my-schedules`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const schedules = await res.json();
+            const container = document.getElementById('schedulesContainer');
+            if (!schedules.length) { container.innerHTML = '<p>No schedules.</p>'; return; }
+            container.innerHTML = schedules.map(s => `
+                <div class="schedule-card">
+                    <div><strong>${s.SubjectTitle || s.SubjectCode}</strong><br>${s.DayOfWeek} ${s.StartTime}-${s.EndTime} | Room: ${s.Room || 'N/A'}<br><small>${s.ClassID}</small></div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-primary" onclick="generateSession('${s.ClassID}')">Generate QR</button>
+                        <button class="btn-secondary" onclick="deleteSchedule('${s.ClassID}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        async function generateSession(classId) {
+            const res = await fetch(`${API_BASE}/generate-session`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ classid: classId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('qrcode').innerHTML = '';
+                document.getElementById('qrAttendanceId').textContent = data.attendanceid;
+                new QRCode(document.getElementById('qrcode'), { text: data.attendanceid, width:200, height:200 });
+                document.getElementById('qrModal').classList.add('active');
+            } else alert(data.error);
+        }
+        document.getElementById('qrCloseBtn').addEventListener('click', () => { qrModal.classList.remove('active'); });
+
+        async function deleteSchedule(classId) {
+            if (!confirm('Delete schedule?')) return;
+            const res = await fetch(`${API_BASE}/schedules/${classId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) loadSchedulesForQR();
+            else alert('Error');
+        }
+
+        // Schedule Modal
+        document.getElementById('openScheduleModalBtn').addEventListener('click', async () => {
+            document.getElementById('scheduleClassId').value = '';
+            document.getElementById('scheduleStartTime').value = '';
+            document.getElementById('scheduleEndTime').value = '';
+            document.getElementById('scheduleRoom').value = '';
+            if (isAdmin()) {
+                document.getElementById('instructorSelectGroup').classList.remove('hidden');
+                const sel = document.getElementById('scheduleInstructorID');
+                sel.innerHTML = '<option value="">-- None --</option>';
+                const res = await fetch(`${API_BASE}/api/admin/instructors`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const insts = await res.json();
+                insts.forEach(i => sel.add(new Option(`${i.InstructorID} - ${i.InstructorSurname}, ${i.InstructorFirstName}`, i.InstructorID)));
+            } else {
+                document.getElementById('instructorSelectGroup').classList.add('hidden');
+            }
+            // Load subjects
+            const subSel = document.getElementById('scheduleSubjectCode');
+            subSel.innerHTML = '<option value="">-- Select Subject --</option>';
+            const subRes = await fetch(`${API_BASE}/subjects`);
+            const subs = await subRes.json();
+            subs.forEach(s => subSel.add(new Option(`${s.SubjectCode} - ${s.SubjectTitle || ''}`, s.SubjectCode)));
+            document.getElementById('scheduleModal').classList.add('active');
+        });
+        document.getElementById('cancelScheduleBtn').addEventListener('click', () => scheduleModal.classList.remove('active'));
+        document.getElementById('saveScheduleBtn').addEventListener('click', async () => {
+            const body = {
+                classid: document.getElementById('scheduleClassId').value,
+                subjectcode: document.getElementById('scheduleSubjectCode').value,
+                dayofweek: document.getElementById('scheduleDayOfWeek').value,
+                starttime: document.getElementById('scheduleStartTime').value,
+                endtime: document.getElementById('scheduleEndTime').value,
+                room: document.getElementById('scheduleRoom').value
+            };
+            if (isAdmin()) body.instructorid = document.getElementById('scheduleInstructorID').value;
+            const res = await fetch(`${API_BASE}/schedules`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { alert('Schedule added'); scheduleModal.classList.remove('active'); loadSchedulesForQR(); }
+            else alert((await res.json()).error);
+        });
+
+        // ---------- STUDENTS (All & Enrollments) ----------
+        const studentSubTabs = document.querySelectorAll('#studentsPage .sub-tab');
+        studentSubTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                studentSubTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('#studentsPage .sub-page').forEach(p => p.classList.remove('active'));
+                document.getElementById(tab.dataset.sub + 'Sub').classList.add('active');
+                if (tab.dataset.sub === 'allStudents') loadAllStudents();
+                else loadEnrollmentClassDropdown();
+            });
+        });
+
+        async function loadAllStudents(search = '') {
+            const url = `${API_BASE}/api/students?search=${encodeURIComponent(search)}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const students = await res.json();
+            const tbody = document.querySelector('#allStudentsTable tbody');
+            tbody.innerHTML = students.map(s => `<tr><td>${s.StudentID}</td><td>${[s.Surname, s.FirstName, s.MiddleName].filter(Boolean).join(', ')}</td><td>${s.YearLevel || ''}</td><td>${s.CourseID || ''}</td><td><span class="action-btn delete-btn" onclick="deleteStudent('${s.StudentID}')">🗑️</span></td></tr>`).join('');
+        }
+        document.getElementById('searchStudentsBtn').addEventListener('click', () => loadAllStudents(document.getElementById('studentSearch').value));
+        document.getElementById('openCreateStudentModalBtn').addEventListener('click', () => {
+            document.getElementById('newStudentId').value = '';
+            document.getElementById('newSurname').value = '';
+            document.getElementById('newFirstName').value = '';
+            document.getElementById('newMiddleName').value = '';
+            document.getElementById('newYearLevel').value = '';
+            document.getElementById('newCourseID').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('createStudentModal').classList.add('active');
+        });
+        document.getElementById('cancelNewStudentBtn').addEventListener('click', () => createStudentModal.classList.remove('active'));
+        document.getElementById('saveNewStudentBtn').addEventListener('click', async () => {
+            const body = {
+                studentid: document.getElementById('newStudentId').value,
+                surname: document.getElementById('newSurname').value,
+                firstname: document.getElementById('newFirstName').value,
+                middlename: document.getElementById('newMiddleName').value,
+                yearlevel: document.getElementById('newYearLevel').value,
+                courseid: document.getElementById('newCourseID').value,
+                password: document.getElementById('newPassword').value
+            };
+            const res = await fetch(`${API_BASE}/api/students`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { alert('Created'); createStudentModal.classList.remove('active'); loadAllStudents(); }
+            else alert((await res.json()).error);
+        });
+        async function deleteStudent(sid) {
+            if (!confirm('Delete?')) return;
+            const res = await fetch(`${API_BASE}/api/students/${sid}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) loadAllStudents();
+            else alert('Error');
+        }
+
+        // Enrollments
+        async function loadEnrollmentClassDropdown() {
+            const sel = document.getElementById('enrollClassSelect');
+            sel.innerHTML = '<option value="">-- Choose Class --</option>';
+            const res = await fetch(`${API_BASE}/api/instructor/classes`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const classes = await res.json();
+            classes.forEach(c => sel.add(new Option(`${c.ClassID} - ${c.SubjectCode}`, c.ClassID)));
+        }
+        document.getElementById('loadEnrollmentsBtn').addEventListener('click', async () => {
+            const classId = document.getElementById('enrollClassSelect').value;
+            if (!classId) return;
+            const res = await fetch(`${API_BASE}/api/enrollments?classid=${classId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const enrollments = await res.json();
+            const tbody = document.querySelector('#enrollmentsTable tbody');
+            tbody.innerHTML = enrollments.map(e => `<tr><td>${e.StudentID}</td><td>${[e.Surname, e.FirstName, e.MiddleName].filter(Boolean).join(', ')}</td><td><span class="action-btn delete-btn" onclick="unenroll('${e.StudentID}','${classId}')">🗑️</span></td></tr>`).join('');
+        });
+        document.getElementById('openEnrollModalBtn').addEventListener('click', () => {
+            const classId = document.getElementById('enrollClassSelect').value;
+            if (!classId) return alert('Select class first');
+            document.getElementById('enrollClassId').value = classId;
+            document.getElementById('enrollModal').classList.add('active');
+        });
+        document.getElementById('cancelEnrollBtn').addEventListener('click', () => enrollModal.classList.remove('active'));
+        document.getElementById('confirmEnrollBtn').addEventListener('click', async () => {
+            const studentId = document.getElementById('enrollStudentId').value;
+            const classId = document.getElementById('enrollClassId').value;
+            const res = await fetch(`${API_BASE}/api/enrollments`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ studentid: studentId, classid: classId })
+            });
+            if (res.ok) { alert('Enrolled'); enrollModal.classList.remove('active'); document.getElementById('loadEnrollmentsBtn').click(); }
+            else alert((await res.json()).error);
+        });
+        async function unenroll(sid, cid) {
+            if (!confirm('Remove?')) return;
+            const res = await fetch(`${API_BASE}/api/enrollments`, {
+                method: 'DELETE', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ studentid: sid, classid: cid })
+            });
+            if (res.ok) document.getElementById('loadEnrollmentsBtn').click();
+        }
+
+        // ---------- INSTRUCTORS (Admin) ----------
+        async function loadInstructors() {
+            const res = await fetch(`${API_BASE}/api/admin/instructors`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const insts = await res.json();
+            const tbody = document.querySelector('#instructorsTable tbody');
+            tbody.innerHTML = insts.map(i => `<tr><td>${i.InstructorID}</td><td>${[i.InstructorSurname, i.InstructorFirstName, i.InstructorMiddleName].filter(Boolean).join(', ')}</td><td>${i.InstructorDepartment || ''}</td><td><span class="action-btn delete-btn" onclick="deleteInstructor('${i.InstructorID}')">🗑️</span></td></tr>`).join('');
+        }
+        document.getElementById('openCreateInstructorModalBtn').addEventListener('click', () => {
+            document.getElementById('newInstructorId').value = '';
+            document.getElementById('newInstructorSurname').value = '';
+            document.getElementById('newInstructorFirstName').value = '';
+            document.getElementById('newInstructorMiddleName').value = '';
+            document.getElementById('newInstructorDepartment').value = '';
+            document.getElementById('newInstructorPassword').value = '';
+            document.getElementById('createInstructorModal').classList.add('active');
+        });
+        document.getElementById('cancelNewInstructorBtn').addEventListener('click', () => createInstructorModal.classList.remove('active'));
+        document.getElementById('saveNewInstructorBtn').addEventListener('click', async () => {
+            const body = {
+                instructorid: document.getElementById('newInstructorId').value,
+                surname: document.getElementById('newInstructorSurname').value,
+                firstname: document.getElementById('newInstructorFirstName').value,
+                middlename: document.getElementById('newInstructorMiddleName').value,
+                department: document.getElementById('newInstructorDepartment').value,
+                password: document.getElementById('newInstructorPassword').value
+            };
+            const res = await fetch(`${API_BASE}/api/admin/instructors`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { alert('Created'); createInstructorModal.classList.remove('active'); loadInstructors(); }
+            else alert((await res.json()).error);
+        });
+        async function deleteInstructor(id) {
+            if (!confirm('Delete?')) return;
+            const res = await fetch(`${API_BASE}/api/admin/instructors/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) loadInstructors();
+        }
+
+        // ---------- REPORTS (Absence) ----------
+        async function loadAbsenceClassDropdown() {
+            const sel = document.getElementById('absenceClassSelect');
+            sel.innerHTML = '<option value="">-- Choose Class --</option>';
+            const res = await fetch(`${API_BASE}/api/instructor/classes`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const classes = await res.json();
+            classes.forEach(c => sel.add(new Option(`${c.ClassID} - ${c.SubjectCode}`, c.ClassID)));
+        }
+        document.getElementById('loadAbsenceReportBtn').addEventListener('click', async () => {
+            const classId = document.getElementById('absenceClassSelect').value;
+            const date = document.getElementById('absenceDateFilter').value;
+            if (!classId || !date) return alert('Fill class and date');
+            const res = await fetch(`${API_BASE}/api/absence-report?classid=${classId}&date=${date}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            document.getElementById('absentTable tbody').innerHTML = data.absent.map(s => `<tr><td>${s.studentid}</td><td>${s.student_name}</td></tr>`).join('');
+            document.getElementById('presentTable tbody').innerHTML = data.present.map(s => `<tr><td>${s.studentid}</td><td>${s.student_name}</td></tr>`).join('');
+            document.getElementById('absenceResults').style.display = 'flex';
+        });
+
+        // ---------- SUBJECTS & COURSES (Admin) ----------
+        // Subjects
+        async function loadSubjects() {
+            const res = await fetch(`${API_BASE}/api/admin/subjects`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const subs = await res.json();
+            const tbody = document.querySelector('#subjectsTable tbody');
+            tbody.innerHTML = subs.map(s => `<tr><td>${s.SubjectCode}</td><td>${s.SubjectTitle || ''}</td><td><span class="action-btn delete-btn" onclick="deleteSubject('${s.SubjectCode}')">🗑️</span></td></tr>`).join('');
+        }
+        document.getElementById('openCreateSubjectModalBtn').addEventListener('click', () => {
+            document.getElementById('newSubjectCode').value = '';
+            document.getElementById('newSubjectTitle').value = '';
+            document.getElementById('createSubjectModal').classList.add('active');
+        });
+        document.getElementById('cancelNewSubjectBtn').addEventListener('click', () => createSubjectModal.classList.remove('active'));
+        document.getElementById('saveNewSubjectBtn').addEventListener('click', async () => {
+            const body = { subjectcode: document.getElementById('newSubjectCode').value, subjecttitle: document.getElementById('newSubjectTitle').value };
+            const res = await fetch(`${API_BASE}/api/admin/subjects`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { alert('Created'); createSubjectModal.classList.remove('active'); loadSubjects(); }
+            else alert((await res.json()).error);
+        });
+        async function deleteSubject(code) {
+            if (!confirm('Delete?')) return;
+            await fetch(`${API_BASE}/api/admin/subjects/${code}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            loadSubjects();
+        }
+        // Courses
+        async function loadCourses() {
+            const res = await fetch(`${API_BASE}/api/admin/courses`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const courses = await res.json();
+            const tbody = document.querySelector('#coursesTable tbody');
+            tbody.innerHTML = courses.map(c => `<tr><td>${c.CourseID}</td><td>${c.CourseDescription || ''}</td><td><span class="action-btn delete-btn" onclick="deleteCourse('${c.CourseID}')">🗑️</span></td></tr>`).join('');
+        }
+        document.getElementById('openCreateCourseModalBtn').addEventListener('click', () => {
+            document.getElementById('newCourseId').value = '';
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('createCourseModal').classList.add('active');
+        });
+        document.getElementById('cancelNewCourseBtn').addEventListener('click', () => createCourseModal.classList.remove('active'));
+        document.getElementById('saveNewCourseBtn').addEventListener('click', async () => {
+            const body = { courseid: document.getElementById('newCourseId').value, coursedescription: document.getElementById('newCourseName').value };
+            const res = await fetch(`${API_BASE}/api/admin/courses`, {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { alert('Created'); createCourseModal.classList.remove('active'); loadCourses(); }
+            else alert((await res.json()).error);
+        });
+        async function deleteCourse(id) {
+            if (!confirm('Delete?')) return;
+            await fetch(`${API_BASE}/api/admin/courses/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            loadCourses();
+        }
+
+        // Sub-tabs for Subjects & Courses
+        document.querySelectorAll('#subjectsCoursesPage .sub-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#subjectsCoursesPage .sub-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('#subjectsCoursesPage .sub-page').forEach(p => p.classList.remove('active'));
+                // ✅ FIXED LINE BELOW
+                document.getElementById(tab.dataset.sub).classList.add('active');
+                if (tab.dataset.sub === 'subjectsSub') loadSubjects();
+                else loadCourses();
+            });
+        });
+        // Initial load for default page (Attendance)
+        loadClassesDropdown();
+    </script>
+</body>
+</html>
