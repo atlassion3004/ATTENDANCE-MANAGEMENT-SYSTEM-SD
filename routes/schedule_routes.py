@@ -3,8 +3,12 @@ from db import get_db_connection
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 from datetime import datetime, timedelta
 from functools import wraps
+import zoneinfo
 
 schedule_routes = Blueprint('schedule_routes', __name__)
+
+def manila_date_str():
+    return datetime.now(zoneinfo.ZoneInfo("Asia/Manila")).strftime('%Y-%m-%d')
 
 # Helper to verify instructor role (UPDATED WITH ADMIN BYPASS)
 def instructor_or_admin_required():
@@ -202,8 +206,8 @@ def generate_session():
         import uuid
         attendance_id = "ATT-" + uuid.uuid4().hex[:8].upper()
         cursor.execute(
-            "INSERT INTO attendance (AttendanceID, ClassID, Date) VALUES (%s, %s, CURDATE())",
-            (attendance_id, class_id)
+            "INSERT INTO attendance (AttendanceID, ClassID, Date) VALUES (%s, %s, %s)",
+            (attendance_id, class_id, manila_date_str())
         )
         conn.commit()
         cursor.close()
