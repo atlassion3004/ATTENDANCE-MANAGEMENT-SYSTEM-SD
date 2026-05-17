@@ -3,8 +3,17 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from db import get_db_connection
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import zoneinfo
 
 attendance_routes = Blueprint('attendance_routes', __name__)
+
+def manila_now():
+    """Return the current datetime in Asia/Manila timezone."""
+    return datetime.now(zoneinfo.ZoneInfo("Asia/Manila"))
+
+def manila_now_time_str():
+    """Return the current time string (HH:MM:SS) in Asia/Manila."""
+    return manila_now().strftime('%H:%M:%S')
 
 @attendance_routes.route('/attendance', methods=['POST'])
 @jwt_required()
@@ -40,20 +49,17 @@ def mark_attendance():
         cursor.execute("SELECT StartTime FROM class_schedule WHERE ClassID = %s", (class_id,))
         sched = cursor.fetchone()
         if sched and sched['StartTime'] is not None:
-            scheduled_start = sched['StartTime']  # this is a timedelta object
-            # Convert timedelta to a time-of-day for comparison
-            now = datetime.now()
+            scheduled_start = sched['StartTime']  # timedelta
+            now = manila_now()
             current_time = now.time()
-            # timedelta to time: (datetime.min + scheduled_start).time()
             start_time = (datetime.min + scheduled_start).time()
-            # Add 15 minutes to the start time
             late_threshold = (datetime.combine(now.date(), start_time) + timedelta(minutes=15)).time()
             if current_time >= late_threshold:
                 status = 'Late'   # override whatever the client sent
         # ----- End lateness check -----
         
         # ---- ADD THE TWO LINES HERE ---- for RECTIFYING SCANNER ERROR
-        time_in = datetime.now().strftime('%H:%M:%S')
+        time_in = manila_now_time_str()
         time_out = data.get('timeout')
 
         # The rest of the function (auto-create parent session if needed, upsert)
@@ -76,7 +82,7 @@ def mark_attendance():
             # If the client didn't send a timeout AND the existing record has no timeout yet,
             # assume this is a time‑out scan → use current server time.
             if new_timeout is None and existing.get('timeout') is None:
-                new_timeout = datetime.now().strftime('%H:%M:%S')
+                new_timeout = manila_now_time_str()
 
             update_query = """
                 UPDATE attendance_details
