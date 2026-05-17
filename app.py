@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from routes.student_routes import student_routes
@@ -14,7 +15,7 @@ from routes.student_dashboard_routes import student_dashboard_routes
 
 app = Flask(__name__)
 
-app.config["JWT_SECRET_KEY"] = "CHANGE-IN-PRODUCTION"
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "default-secret-change-me")
 jwt = JWTManager(app)
 
 app.register_blueprint(student_routes)
@@ -46,3 +47,6 @@ def instructor_dashboard():
 def student_dashboard():
     # Placeholder – or redirect to scanner
     return app.send_static_file('student_dashboard.html')
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
