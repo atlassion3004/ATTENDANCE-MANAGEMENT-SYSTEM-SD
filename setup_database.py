@@ -1,43 +1,21 @@
 import os
 import bcrypt
-import mysql.connector
+from db import get_db_connection
 
 def create_tables_and_admin():
-    # Read credentials from environment
-    db_config = {
-        'host': os.getenv('DB_HOST'),
-        'port': int(os.getenv('DB_PORT', 3306)),
-        'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'database': os.getenv('DB_NAME'),
-        'ssl_disabled': False,
-        'connection_timeout': 10       # seconds
-    }
-
-    # Quick connection test
-    try:
-        test_conn = mysql.connector.connect(**db_config)
-        test_conn.close()
-        print("Connection test successful.")
-    except mysql.connector.Error as e:
-        print(f"Connection failed: {e}")
-        raise
-
-    # Now create tables
-    conn = mysql.connector.connect(**db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     CREATE_TABLES = """
+    -- (same SQL as before, unchanged)
     CREATE TABLE IF NOT EXISTS course (
         CourseID VARCHAR(20) PRIMARY KEY,
         CourseDescription TEXT
     );
-
     CREATE TABLE IF NOT EXISTS subject (
         SubjectCode VARCHAR(20) PRIMARY KEY,
         SubjectTitle VARCHAR(100)
     );
-
     CREATE TABLE IF NOT EXISTS student (
         StudentID VARCHAR(20) PRIMARY KEY,
         Surname VARCHAR(50) NOT NULL,
@@ -49,7 +27,6 @@ def create_tables_and_admin():
         role ENUM('student','instructor') DEFAULT 'student',
         FOREIGN KEY (CourseID) REFERENCES course(CourseID)
     );
-
     CREATE TABLE IF NOT EXISTS instructor (
         InstructorID VARCHAR(20) PRIMARY KEY,
         InstructorSurname VARCHAR(50) NOT NULL,
@@ -58,13 +35,11 @@ def create_tables_and_admin():
         InstructorDepartment VARCHAR(100),
         password_hash VARCHAR(255)
     );
-
     CREATE TABLE IF NOT EXISTS admin (
         AdminID VARCHAR(20) PRIMARY KEY,
         AdminName VARCHAR(100) NOT NULL,
         password_hash VARCHAR(255) NOT NULL
     );
-
     CREATE TABLE IF NOT EXISTS class_schedule (
         ClassID VARCHAR(20) PRIMARY KEY,
         SubjectCode VARCHAR(20),
@@ -76,14 +51,12 @@ def create_tables_and_admin():
         FOREIGN KEY (SubjectCode) REFERENCES subject(SubjectCode),
         FOREIGN KEY (InstructorID) REFERENCES instructor(InstructorID)
     );
-
     CREATE TABLE IF NOT EXISTS attendance (
         AttendanceID VARCHAR(30) PRIMARY KEY,
         ClassID VARCHAR(20),
         Date DATE,
         FOREIGN KEY (ClassID) REFERENCES class_schedule(ClassID)
     );
-
     CREATE TABLE IF NOT EXISTS attendance_details (
         attendanceid VARCHAR(30) NOT NULL,
         studentid VARCHAR(20) NOT NULL,
@@ -94,7 +67,6 @@ def create_tables_and_admin():
         FOREIGN KEY (attendanceid) REFERENCES attendance(AttendanceID),
         FOREIGN KEY (studentid) REFERENCES student(StudentID)
     );
-
     CREATE TABLE IF NOT EXISTS enrollment (
         StudentID VARCHAR(20) NOT NULL,
         ClassID VARCHAR(20) NOT NULL,
