@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager
 from routes.student_routes import student_routes
 from routes.attendance_routes import attendance_routes
@@ -47,6 +47,22 @@ def instructor_dashboard():
 def student_dashboard():
     # Placeholder – or redirect to scanner
     return app.send_static_file('student_dashboard.html')
+
+# Temporary route to run database setup on Render
+@app.route('/setup-db')
+def run_setup():
+    # Protect with a secret query parameter
+    secret = request.args.get('secret', '')
+    required_secret = os.environ.get('SETUP_SECRET', 'super-setup-secret')
+    if secret != required_secret:
+        return "Unauthorized", 401
+
+    try:
+        from setup_database import create_tables_and_admin
+        create_tables_and_admin()
+        return "Database setup completed successfully! You can now use the app."
+    except Exception as e:
+        return f"Error during setup: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
