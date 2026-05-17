@@ -48,10 +48,8 @@ def student_dashboard():
     # Placeholder – or redirect to scanner
     return app.send_static_file('student_dashboard.html')
 
-# Temporary route to run database setup on Render
 @app.route('/setup-db')
 def run_setup():
-    # Protect with a secret query parameter
     secret = request.args.get('secret', '')
     required_secret = os.environ.get('SETUP_SECRET', 'super-setup-secret')
     if secret != required_secret:
@@ -59,10 +57,16 @@ def run_setup():
 
     try:
         from setup_database import create_tables_and_admin
+        # Run the setup and capture printed output (optional)
+        import io, sys
+        old_stdout = sys.stdout
+        sys.stdout = buffer = io.StringIO()
         create_tables_and_admin()
-        return "Database setup completed successfully! You can now use the app."
+        sys.stdout = old_stdout
+        output = buffer.getvalue()
+        return f"<pre>{output}</pre>Database setup completed!"
     except Exception as e:
-        return f"Error during setup: {str(e)}", 500
+        return f"<pre>Error: {str(e)}</pre>", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
