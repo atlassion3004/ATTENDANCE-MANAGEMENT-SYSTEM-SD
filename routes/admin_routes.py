@@ -205,3 +205,5 @@ def delete_course(course_id):
         return jsonify({"message": "Course deleted"}), 200
     else:
         return jsonify({"error": "Course not found"}), 404
+    
+#sample comment
